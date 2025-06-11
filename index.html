@@ -1,0 +1,51 @@
+<body>
+  <h1 id="site-title">Loading...</h1>
+  <div id="dynamic-content"></div>
+
+  <script>
+    async function loadSite(id) {
+      const res = await fetch('api.php?id=' + id);
+      if (!res.ok) {
+        document.getElementById('dynamic-content').innerHTML = '<p>Error loading site.</p>';
+        document.getElementById('site-title').textContent = 'Error';
+        return;
+      }
+
+      const data = await res.json();
+
+      // Set title
+      document.getElementById('site-title').textContent = data.name || 'Untitled Site';
+
+      // Remove previous styles and scripts
+      document.head.querySelectorAll('style.dynamic-style').forEach(e => e.remove());
+      document.body.querySelectorAll('script.dynamic-script').forEach(e => e.remove());
+
+      // Inject CSS
+      const style = document.createElement('style');
+      style.classList.add('dynamic-style');
+      style.textContent = data.css;
+      document.head.appendChild(style);
+
+      // Inject HTML
+      document.getElementById('dynamic-content').innerHTML = data.html;
+
+      // Inject and execute JS
+      const script = document.createElement('script');
+      script.classList.add('dynamic-script');
+      script.type = 'text/javascript';
+      script.textContent = data.js;
+      document.body.appendChild(script);
+    }
+
+    function getIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id') || '1';
+    }
+
+    loadSite(getIdFromURL());
+
+    window.addEventListener('popstate', () => {
+      loadSite(getIdFromURL());
+    });
+  </script>
+</body>
